@@ -6,14 +6,12 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 #os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
-
 app = Flask(__name__)
 app.secret_key = "wjdghks3#"
 
 titles = pd.read_csv('assets/matrixs_meta/titles.csv')
 lower_title = [i.lower() for i in titles['title']]
 original_titles = [i for i in titles['title']]
-
 
 @app.route("/", methods = ["POST", "GET"])
 def spec_movie0():
@@ -24,8 +22,6 @@ def spec_movie0():
             return redirect(url_for('spec_movie2'))
         else:
             return redirect(url_for('spec_movie1'))
-
-    
 
 @app.route("/spec_movie1", methods = ["POST", "GET"])
 def spec_movie1():
@@ -51,25 +47,22 @@ def spec_movie3(some_list):
     
     return render_template("index_movie3.html", similar_titles = similar_titles,len = len(similar_titles))
 
-
-# @app.route("/spec_movie4", methods = ["POST", "GET"])
-# def spec_movie4():
-#     return render_template("index_movie4.html")
-     
-
-
-@app.route("/form2", methods = ["POST"])
+@app.route("/form2", methods = ["GET", "POST"])
 def form2():
-
-    # Bring personal spec from the form
+    # if not request.form.get("name"):
+    #     flash('Please input a PIN.', 'warning')
     try:
         typed_name = request.form.get('name')
     except:
-        pass
-    try:
+    	pass
+    try: 
         movie_name = request.form.get('movie_sample')
     except:
-        pass
+    	pass
+
+    if (not typed_name) and (not movie_name):
+        flash('Please type movie name.')
+        return redirect(url_for('spec_movie1'))
 
     if typed_name:
         if typed_name.lower() in lower_title:
@@ -85,12 +78,12 @@ def form2():
             similar_titles = list(set(similar_titles))
             comma_separated = ','.join(similar_titles)
 
+            if len(similar_titles) == 0:
+                flash("There are no similar titles. Please type another movie title")
+                return redirect(url_for('spec_movie1'))
 
             typed_name = typed_name.replace(" ", "_")
             return redirect(url_for('spec_movie3', some_list=typed_name))
-
-
-            
 
     algo = request.form.get('filter')
     
@@ -165,9 +158,6 @@ def form2():
     results = [i for i in results]
     top1 = results[0]
     
-
-
-    #print(results2)
     above50 = 0
     above30 = 0
     for i in sim_scores:
@@ -177,9 +167,6 @@ def form2():
             above30 += 1 
         else:
             pass
-
-    
-
 
     return render_template("movie_visualization.html", 
                             movie_name = movie_name, 
@@ -191,18 +178,10 @@ def form2():
                             above30 = above30,
                             top1 = top1)
                                        
-                                    
-                                        
-                                          
-
+  
 
 if __name__ == '__main__':
     #os.environ['FLASK_ENV'] = 'development'
     app.run(debug = True)
 
-
-
-
-
-   
 
